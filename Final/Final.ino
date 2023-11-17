@@ -12,6 +12,9 @@ String password = ":$SpEL7<*7";
 int buzzerPin = 11; // set the buzzer pin
 int frequency = 0; // initialize the frequency variable
 
+static int Tones_simple[] ={31, 33, 37, 41, 44, 49, 55, 62, 65, 73, 82, 87, 98, 110, 123, 131, 147, 165,
+ 175, 196, 220, 247, 262, 294, 330, 349, 392, 440, 494, 523, 587, 659, 698, 784, 880, 988, 1047};
+
 // Keypad
 const byte ROWS = 4;
 const byte COLS = 5;
@@ -51,8 +54,8 @@ void setup()
   delay(500);
 
   Serial.println("Connecting to WiFi...");
-  // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
-  espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
+  espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
+  // espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
   delay(4000);
 
   String response = readESPSerial();
@@ -83,12 +86,11 @@ void setup()
 void loop()
 {
   ASCIIStr = "";
-  // String siteURL = serialPrompt("Please enter your PING target: ");
   String siteURL = readKeypadInput("Please enter your PING target: ");
   delay(100);
   siteURL.toLowerCase();
 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 15; i++) {
     Serial.println("pinging " + siteURL + ": ");
     int siteDelay = pingSite(siteURL);
 
@@ -96,13 +98,15 @@ void loop()
     ASCIIStr += ascii;
     Serial.println("ASCII: " + ASCIIStr);
     Serial.println(siteDelay);
+
     delay(50); // CANNOT DELETE THIS DELAY
-    frequency = siteDelay * 10; // read the input as an integer
-    tone(buzzerPin, frequency); // generate the tone with the specified frequency
-    delay(500); // wait for 500 milliseconds
+    frequency = convertFreq(frequency);
     noTone(buzzerPin); // stop the tone
-    delay(50);
+    tone(buzzerPin, frequency); // generate the tone with the specified frequency
+    delay(100); // wait for 500 milliseconds
+
   }
+  noTone(buzzerPin); // stop the tone
   delay(50);
 }
 
@@ -211,7 +215,20 @@ char intToASCII(int num, boolean charOnly = true)
   int mapped = 0;
   if (charOnly)
   {
-    mapped = (abs(num) % 96) + 32;
+
+    if (num <= 0)
+    {
+      return ' ';
+    }
+
+    mapped = (abs(num) % 64) + 64;
+
+    if ((mapped >= 91 && mapped <= 96) ||
+       (mapped >= 123 && mapped <= 126) ||
+       (mapped == 0))
+    {
+      return ' ';
+    }
   }
   else {
     mapped = abs(num) % 128;
@@ -220,4 +237,25 @@ char intToASCII(int num, boolean charOnly = true)
   Serial.println(mapped);
   char result = mapped;
   return result;
+}
+
+int convertFreq(int inputFreq){
+  int frequency = inputFreq;
+  // int digit2 = inputFreq % 10 + 1;
+  // frequency = (inputFreq * digit2);
+  frequency = 1047 * (sin(1.618 * (frequency - (PI / 2))) + 1) / 2;
+  Serial.print(frequency);
+  Serial.print(" ");
+  int toneFreq = matchTone(frequency) / 0.618;
+  Serial.println(toneFreq);
+  return toneFreq;
+}
+
+int matchTone(int inputTone) {
+  for (int i = 0; i < sizeof(Tones_simple) - 1; i++) {
+    if (inputTone <= (Tones_simple[i] + Tones_simple[i + 1]) / 2) {
+      return Tones_simple[i];
+    }
+  }
+  return Tones_simple[sizeof(Tones_simple) - 1];
 }
