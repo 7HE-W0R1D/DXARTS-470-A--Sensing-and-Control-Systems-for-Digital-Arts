@@ -1,11 +1,13 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial espSerial(6, 7); // RX, TX
+// SoftwareSerial espSerial(6, 7); // RX, TX
+SoftwareSerial espSerial(A1, A0); // RX, TX
+
 String ssid = "BreakfastBerry";
 String password = "N;9263k2";
 
 void setup() {
-  Serial.begin(2400);
+  Serial.begin(115200);
   espSerial.begin(115200);
   delay(500);
 

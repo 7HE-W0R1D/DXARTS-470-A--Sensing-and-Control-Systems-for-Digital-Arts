@@ -21,7 +21,7 @@ char intToASCII(int num, boolean charOnly = true)
   int mapped = 0;
   if (charOnly)
   {
-    mapped = (abs(num) % 96) + 32;
+    mapped = (abs(num) % 64) + 64;
   }
   else {
     mapped = abs(num) % 128;

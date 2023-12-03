@@ -1,8 +1,6 @@
 #include <SoftwareSerial.h>
 
-// SoftwareSerial espSerial(A0, A1); // RX, TX
-SoftwareSerial espSerial(A1, A0); // RX, TX
-
+SoftwareSerial espSerial(A0, A1); // RX, TX
 String ssid_home = "MSI7C94";
 String password_home = "MSIB550M";
 String ssid = "UW MPSK";
@@ -15,6 +13,8 @@ void setup()
   delay(500);
   reset();
   delay(500);
+
+  randomSeed(analogRead(A2));
 
   Serial.println("Connecting to WiFi...");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
@@ -48,14 +48,19 @@ void setup()
 
 void loop()
 {
-  // String siteURL = serialPrompt("Please enter your PING target: ");
-  // Serial.println("pinging " + siteURL + ": ");
-  // int siteDelay = pingSite(siteURL);
-  // Serial.println(siteDelay);
-  // // Serial.println("pinging google.com: ");
-  // // int siteDelay = pingSite("google.com");
-  // // Serial.println(siteDelay);
-  // delay(500);
+  String siteURL = serialPrompt("Please enter your PING target: ");
+//   Serial.println("pinging " + siteURL + ": ");
+//   int siteDelay = pingSite(siteURL);
+
+    for (int i = 0; i < 15; i++) {
+        int siteDelay = pingSite("google.com");
+        Serial.println(siteDelay);
+        // Serial.println("pinging google.com: ");
+        // int siteDelay = pingSite("google.com");
+        // Serial.println(siteDelay);
+        Serial.println("ConvNumber: " + String(ConvNumber(siteDelay)));
+        delay(500);
+    }
 }
 
 String readESPSerial()
@@ -73,7 +78,7 @@ int pingSite(String siteURL) {
   espSerial.println("AT+PING=\""+ siteURL +"\"");
   delay(1000);
   String response = readESPSerial();
-  Serial.println("response: " + response);
+//   Serial.println("response: " + response);
 
 
   if (response.indexOf("OK") != -1) {
@@ -103,4 +108,22 @@ void reset() {
   espSerial.println("AT+RST");
   delay(1000);
   if(espSerial.find("OK") ) Serial.println("Module Reset");
+}
+
+int prevNumber = -1;
+int prevResult = -1;
+int ConvNumber (int Input) {
+    if (prevNumber == Input) {
+        return prevResult;
+    } else {
+        prevNumber = Input;
+        prevResult = ConvNumber_Map(Input);
+        return prevResult;
+    }
+}
+
+int ConvNumber_Map(int Input) {
+    const int RANGE = 3;
+    int randNumber = random(RANGE);
+    return Input + randNumber - (RANGE - 1) / 2;
 }

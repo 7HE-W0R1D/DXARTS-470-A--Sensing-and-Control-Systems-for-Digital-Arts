@@ -2,9 +2,11 @@
 #include <Keypad.h>
 
 // Wifi
-SoftwareSerial espSerial(A0, A1); // RX, TX
-String ssid_home = "MSI7C94";
-String password_home = "MSIB550M";
+SoftwareSerial espSerial(A1, A0); // RX, TX
+String ssid_home = "BreakfastBerry";
+String password_home = "N;9263k2";
+String ssid_x13 = "ThinkPad";
+String password_x13 = "AMD4750u";
 String ssid = "UW MPSK";
 String password = ":$SpEL7<*7";
 
@@ -19,20 +21,30 @@ static int Tones_simple[] ={31, 33, 37, 41, 44, 49, 55, 62, 65, 73, 82, 87, 98, 
 const byte ROWS = 4;
 const byte COLS = 5;
 
+// Wiring: 2 3 4 5 8 9 10 12 || 13
+
 // < is P1, > is P2, / is P3
 char keys[ROWS][COLS] = {
-  {'/', '1', '2', '3', ')'},
-  {'>', '4', '5', '6', 'L'},
-  {'<', '7', '8', '9', 'M'},
-  {'(', '*', '0', '#', 'F'}
+//          8    5    4    3    2
+/* 9  */  {'/', '1', '2', '3', ')'},
+/* 10 */  {'>', '4', '5', '6', 'L'},
+/* 13 */  {'<', '7', '8', '9', 'M'},
+/* 12 */  {'(', '*', '0', '#', 'F'}
 };
 
 String multiEnabled = "0123456789";
-String keyStringArray[10] = {
+String keyStringArray_Capital[10] = {
   "0Z.",
   "1", "2ABC", "3DEF",
   "4GHI", "5JKL", "6MNO",
-  "7PQRS", "8TUV", "9WXY."
+  "7PQRS", "8TUV", "9WXY"
+};
+
+String keyStringArray[10] = {
+  "0z.",
+  "1", "2abc", "3def",
+  "4ghi", "5jkl", "6mno",
+  "7pqrs", "8tuv", "9wxy"
 };
 
 byte rowPins[ROWS] = {9, 10, 13, 12};
@@ -46,6 +58,8 @@ String result = "";
 String ASCIIStr = "";
 char intToASCII(int , boolean = true);
 
+String serialPrompt(String = "Please enter your PING target: ");
+
 void setup()
 {
   pinMode(buzzerPin, OUTPUT); // set the buzzer pin as an output
@@ -53,10 +67,16 @@ void setup()
   espSerial.begin(9600);
   delay(500);
 
+  Serial.println("Setting ESP8266 to station mode...");
+  espSerial.println("AT+CWMODE=1");
+  delay(1000);
+
   Serial.println("Connecting to WiFi...");
+  delay(50);
   espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
+  // espSerial.println("AT+CWJAP_CUR=\"" + ssid_x13 + "\",\"" + password_x13 + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
-  delay(4000);
+  delay(9000);
 
   String response = readESPSerial();
   Serial.println(response);
@@ -65,11 +85,21 @@ void setup()
   || response.indexOf("WIFI CON") != -1)
   {
     Serial.println("Connected to WiFi!");
+    noTone(buzzerPin); // stop the tone
+    tone(buzzerPin, Tones_simple[10]); // generate the tone with the specified frequency
+    delay(50); // wait for 100 milliseconds
+    noTone(buzzerPin); // stop the tone
+    tone(buzzerPin, Tones_simple[10]); // generate the tone with the specified frequency
+    delay(50); // wait for 100 milliseconds
+    noTone(buzzerPin); // stop the tone
   }
   else
   {
     Serial.println("Failed to connect to WiFi! \nPlease reset the ESP8266 and try again.");
     // for (;;);
+    tone(buzzerPin, Tones_simple[3]); // generate the tone with the specified frequency
+    delay(500); // wait for 100 milliseconds
+    noTone(buzzerPin); // stop the tone
   }
 
   Serial.println("Getting IP Address");
@@ -81,6 +111,7 @@ void setup()
   ipAddr.replace("\r", "");
   ipAddr.replace("\"", "");
   Serial.println("IP get: " + ipAddr + " END");
+  randomSeed(analogRead(A2));
 }
 
 void loop()
@@ -100,10 +131,11 @@ void loop()
     Serial.println(siteDelay);
 
     delay(50); // CANNOT DELETE THIS DELAY
-    frequency = convertFreq(frequency);
+    frequency = convertFreq(ConvNumber(siteDelay));
+    Serial.println(frequency);
     noTone(buzzerPin); // stop the tone
     tone(buzzerPin, frequency); // generate the tone with the specified frequency
-    delay(100); // wait for 500 milliseconds
+    delay(100); // wait for 100 milliseconds
 
   }
   noTone(buzzerPin); // stop the tone
@@ -139,8 +171,8 @@ int pingSite(String siteURL) {
   }
 }
 
-String serialPrompt(String prompt) {
-  Serial.println("Please enter your PING target: ");
+String serialPrompt(String prompt = "Please enter your PING target: ") {
+  Serial.println(prompt);
 
   while(Serial.available() == 0){
   }
@@ -162,6 +194,13 @@ String readKeypadInput(String prompt)
 
     if (key != NO_KEY)
     {
+      // Beep when key is pressed
+      int keyStringIndex = multiEnabled.indexOf(key);
+      int frequency = Tones_simple[keyStringIndex * 3 + 10];
+      tone(buzzerPin, frequency); // generate the tone with the specified frequency
+      delay(30); // wait for 500 milliseconds
+      noTone(buzzerPin); // stop the tone
+
       // Special keys first
       if (key == '#')
       {
@@ -172,12 +211,21 @@ String readKeypadInput(String prompt)
       if (key == '*')
       {
         result = result.substring(0, result.length() - 1);
+        Serial.println("Result: " + result);
         continue;
       }
 
       if (key == '/')
       {
         return "google.com";
+      }
+
+      if (key == '>') {
+        return "bing.com";
+      }
+
+      if (key == '<') {
+        return "8.8.8.8";
       }
 
       // Multi key press key detection
@@ -234,7 +282,7 @@ char intToASCII(int num, boolean charOnly = true)
     mapped = abs(num) % 128;
   }
 
-  Serial.println(mapped);
+  // Serial.println(mapped);
   char result = mapped;
   return result;
 }
@@ -244,10 +292,10 @@ int convertFreq(int inputFreq){
   // int digit2 = inputFreq % 10 + 1;
   // frequency = (inputFreq * digit2);
   frequency = 1047 * (sin(1.618 * (frequency - (PI / 2))) + 1) / 2;
-  Serial.print(frequency);
-  Serial.print(" ");
+  // Serial.print(frequency);
+  // Serial.print(" ");
   int toneFreq = matchTone(frequency) / 0.618;
-  Serial.println(toneFreq);
+  // Serial.println(toneFreq);
   return toneFreq;
 }
 
@@ -258,4 +306,29 @@ int matchTone(int inputTone) {
     }
   }
   return Tones_simple[sizeof(Tones_simple) - 1];
+}
+
+int prevNumber = -1;
+int prevResult = -1;
+int ConvNumber (int Input) {
+    if (prevNumber == Input) {
+        return prevResult;
+    } else {
+        prevNumber = Input;
+        prevResult = ConvNumber_Map(Input);
+        return prevResult;
+    }
+}
+
+int ConvNumber_Map(int Input) {
+    const int RANGE = 6;
+    int randNumber = random(RANGE);
+    return Input + randNumber - (RANGE - 1) / 2;
+}
+
+void reset() {
+  Serial.println("reset");
+  espSerial.println("AT+RST");
+  delay(1000);
+  if(espSerial.find("OK") ) Serial.println("Module Reset");
 }
