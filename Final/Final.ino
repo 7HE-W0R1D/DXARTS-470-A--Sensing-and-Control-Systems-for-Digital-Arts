@@ -60,12 +60,25 @@ char intToASCII(int , boolean = true);
 
 String serialPrompt(String = "Please enter your PING target: ");
 
+// LED
+int ledUPin = 6; // Upper LED, PWM
+int ledDPin = 7; // Lower LED, no PWM
+
 void setup()
 {
   pinMode(buzzerPin, OUTPUT); // set the buzzer pin as an output
+  pinMode(ledUPin, OUTPUT);
+  pinMode(ledDPin, OUTPUT);
   Serial.begin(115200);
   espSerial.begin(9600);
   delay(500);
+  digitalWrite(ledUPin, HIGH);
+  delay(100);
+  digitalWrite(ledDPin, HIGH);
+  delay(500);
+  digitalWrite(ledUPin, LOW);
+  delay(100);
+  digitalWrite(ledDPin, LOW);
 
   Serial.println("Setting ESP8266 to station mode...");
   espSerial.println("AT+CWMODE=1");
@@ -76,7 +89,7 @@ void setup()
   espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_x13 + "\",\"" + password_x13 + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
-  delay(9000);
+  delay(4000);
 
   String response = readESPSerial();
   Serial.println(response);
@@ -87,11 +100,16 @@ void setup()
     Serial.println("Connected to WiFi!");
     noTone(buzzerPin); // stop the tone
     tone(buzzerPin, Tones_simple[10]); // generate the tone with the specified frequency
-    delay(50); // wait for 100 milliseconds
+    digitalWrite(ledUPin, HIGH);
+    delay(50); // wait for 50 milliseconds
     noTone(buzzerPin); // stop the tone
+    digitalWrite(ledUPin, LOW);
+    delay(50); // wait for 50 milliseconds
     tone(buzzerPin, Tones_simple[10]); // generate the tone with the specified frequency
-    delay(50); // wait for 100 milliseconds
+    digitalWrite(ledUPin, HIGH);
+    delay(50); // wait for 50 milliseconds
     noTone(buzzerPin); // stop the tone
+    digitalWrite(ledUPin, LOW);
   }
   else
   {
@@ -102,6 +120,7 @@ void setup()
     noTone(buzzerPin); // stop the tone
   }
 
+  delay(3000);
   Serial.println("Getting IP Address");
   espSerial.println("AT+CIPSTA_CUR?");
   delay(2000);
@@ -117,25 +136,25 @@ void setup()
 void loop()
 {
   ASCIIStr = "";
-  String siteURL = readKeypadInput("Please enter your PING target: ");
+  String siteURL = readKeypadInput("Please enter your destination site (e.g. google.com): ");
   delay(100);
   siteURL.toLowerCase();
-
+    Serial.println("Communicating with " + siteURL + ": ");
   for (int i = 0; i < 15; i++) {
-    Serial.println("pinging " + siteURL + ": ");
+    // Serial.println("pinging " + siteURL + ": ");
     int siteDelay = pingSite(siteURL);
 
     char ascii = intToASCII(siteDelay);
     ASCIIStr += ascii;
-    Serial.println("ASCII: " + ASCIIStr);
-    Serial.println(siteDelay);
+    Serial.println("Response: " + ASCIIStr);
+    // Serial.println(siteDelay);
 
     delay(50); // CANNOT DELETE THIS DELAY
     frequency = convertFreq(ConvNumber(siteDelay));
-    Serial.println(frequency);
+    // Serial.println(frequency);
     noTone(buzzerPin); // stop the tone
     tone(buzzerPin, frequency); // generate the tone with the specified frequency
-    delay(100); // wait for 100 milliseconds
+    delay(250); // wait for 100 milliseconds
 
   }
   noTone(buzzerPin); // stop the tone
@@ -155,7 +174,7 @@ String readESPSerial()
 
 int pingSite(String siteURL) {
   espSerial.println("AT+PING=\""+ siteURL +"\"");
-  delay(1000);
+  delay(1500);
   String response = readESPSerial();
   // Serial.println("response: " + response);
 
@@ -163,7 +182,7 @@ int pingSite(String siteURL) {
     String siteDelay = response.substring(response.lastIndexOf("+") + 1, response.indexOf("OK") - 1);
     siteDelay.replace("\r", "");
     siteDelay.replace("\n", "");
-    Serial.println("Ping delay: " + siteDelay + "ms");
+    // Serial.println("Ping delay: " + siteDelay + "ms");
     
     return siteDelay.toInt();
   } else {
@@ -198,8 +217,10 @@ String readKeypadInput(String prompt)
       int keyStringIndex = multiEnabled.indexOf(key);
       int frequency = Tones_simple[keyStringIndex * 3 + 10];
       tone(buzzerPin, frequency); // generate the tone with the specified frequency
-      delay(30); // wait for 500 milliseconds
+      digitalWrite(ledUPin, HIGH);
+      delay(30);
       noTone(buzzerPin); // stop the tone
+      digitalWrite(ledUPin, LOW);
 
       // Special keys first
       if (key == '#')
@@ -217,7 +238,7 @@ String readKeypadInput(String prompt)
 
       if (key == '/')
       {
-        return "google.com";
+        return "portfolio.breakfastberry.live";
       }
 
       if (key == '>') {
@@ -294,7 +315,7 @@ int convertFreq(int inputFreq){
   frequency = 1047 * (sin(1.618 * (frequency - (PI / 2))) + 1) / 2;
   // Serial.print(frequency);
   // Serial.print(" ");
-  int toneFreq = matchTone(frequency) / 0.618;
+  int toneFreq = matchTone(frequency) * 0.618;
   // Serial.println(toneFreq);
   return toneFreq;
 }
