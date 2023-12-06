@@ -7,8 +7,8 @@ String ssid = "BreakfastBerry";
 String password = "N;9263k2";
 
 void setup() {
-  Serial.begin(115200);
-  espSerial.begin(115200);
+  Serial.begin(9600);
+  espSerial.begin(9600);
   delay(500);
 
   Serial.println("Setting baud rate");

@@ -1,5 +1,10 @@
 #include <SoftwareSerial.h>
 #include <Keypad.h>
+#include <Wire.h>
+#include <SerLCD.h>
+
+// LCD
+SerLCD lcd;
 
 // Wifi
 SoftwareSerial espSerial(A1, A0); // RX, TX
@@ -69,7 +74,16 @@ void setup()
   pinMode(buzzerPin, OUTPUT); // set the buzzer pin as an output
   pinMode(ledUPin, OUTPUT);
   pinMode(ledDPin, OUTPUT);
-  Serial.begin(115200);
+  Serial.begin(9600);
+
+  // Initialize the LCD
+  lcd.begin(Serial);
+  // Set the backlight brightness (optional)
+  lcd.setBacklight(255);
+  // Clear the LCD screen
+  lcd.clear();
+  delay(500);
+
   espSerial.begin(9600);
   delay(500);
   digitalWrite(ledUPin, HIGH);
@@ -84,11 +98,12 @@ void setup()
   espSerial.println("AT+CWMODE=1");
   delay(1000);
 
+  lcd.clear();
   Serial.println("Connecting to WiFi...");
   delay(50);
-  espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
+  // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_x13 + "\",\"" + password_x13 + "\"");
-  // espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
+  espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
   delay(4000);
 
   String response = readESPSerial();
@@ -135,11 +150,13 @@ void setup()
 
 void loop()
 {
+  lcd.clear();
+  Serial.println("Welcome to the W3Phone!");
   ASCIIStr = "";
   String siteURL = readKeypadInput("Please enter your destination site (e.g. google.com): ");
   delay(100);
   siteURL.toLowerCase();
-    Serial.println("Communicating with " + siteURL + ": ");
+  Serial.println("Communicating with " + siteURL + ": ");
   for (int i = 0; i < 15; i++) {
     // Serial.println("pinging " + siteURL + ": ");
     int siteDelay = pingSite(siteURL);

@@ -8,7 +8,7 @@ String password = ":$SpEL7<*7";
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   espSerial.begin(9600);
   delay(500);
   reset();

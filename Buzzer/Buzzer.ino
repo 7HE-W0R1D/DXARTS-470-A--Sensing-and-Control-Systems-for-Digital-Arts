@@ -10,7 +10,7 @@ int buzzerPin = 11; // set the buzzer pin
 
 void setup() {
   pinMode(buzzerPin, OUTPUT); // set the buzzer pin as an output
-  Serial.begin(115200); // initialize serial communication
+  Serial.begin(9600); // initialize serial communication
 }
 
 void loop() {

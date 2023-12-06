@@ -4,7 +4,7 @@ int a = 2070;
 void setup()
 {
   // print the result to the serial monitor
-  Serial.begin(115200); // initialize serial communication
+  Serial.begin(9600); // initialize serial communication
   char b = intToASCII(a);
   Serial.print("The ASCII character for the integer ");
   Serial.print(a);

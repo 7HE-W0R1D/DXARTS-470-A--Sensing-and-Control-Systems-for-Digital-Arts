@@ -8,7 +8,7 @@
 SoftwareSerial espSerial(ESP8266_RX_PIN, ESP8266_TX_PIN); // Create a SoftwareSerial object for ESP8266
 
 void setup() {
-  Serial.begin(115200); // Start the serial communication with the computer
+  Serial.begin(9600); // Start the serial communication with the computer
   espSerial.begin(9600); // Start the serial communication with the ESP8266
 }
 
