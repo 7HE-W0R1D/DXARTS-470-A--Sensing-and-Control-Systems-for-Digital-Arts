@@ -99,20 +99,23 @@ void setup()
   delay(1000);
 
   lcd.clear();
-  Serial.println("Connecting to WiFi...");
+  // Serial.println("Connecting to WiFi...");
+  lcd.print("Connecting to WiFi...");
   delay(50);
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_x13 + "\",\"" + password_x13 + "\"");
   espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
   delay(4000);
 
+  lcd.clear();
   String response = readESPSerial();
-  Serial.println(response);
+  // Serial.println(response);
 
   if (response.indexOf("CONNECTED") != -1 || response.indexOf("GOT IP") != -1 || response.indexOf("OK") != -1
   || response.indexOf("WIFI CON") != -1)
   {
-    Serial.println("Connected to WiFi!");
+    // Serial.println("Connected to WiFi!");
+    lcd.print("Connected to WiFi!");
     noTone(buzzerPin); // stop the tone
     tone(buzzerPin, Tones_simple[10]); // generate the tone with the specified frequency
     digitalWrite(ledUPin, HIGH);
@@ -128,43 +131,67 @@ void setup()
   }
   else
   {
-    Serial.println("Failed to connect to WiFi! \nPlease reset the ESP8266 and try again.");
+    // Serial.println("Failed to connect to WiFi! \nPlease reset the ESP8266 and try again.");
     // for (;;);
+    lcd.print("Failed to connect to WiFi!");
     tone(buzzerPin, Tones_simple[3]); // generate the tone with the specified frequency
     delay(500); // wait for 100 milliseconds
     noTone(buzzerPin); // stop the tone
   }
 
   delay(3000);
-  Serial.println("Getting IP Address");
+
+  lcd.clear();
+  // Serial.println("Getting IP Address");
+  lcd.print("Getting IP Address");
   espSerial.println("AT+CIPSTA_CUR?");
   delay(2000);
   String ipStr = readESPSerial();
-  Serial.println(ipStr);
+  // Serial.println(ipStr);
   String ipAddr = ipStr.substring(ipStr.indexOf("\"") + 1, ipStr.lastIndexOf("\""));
   ipAddr.replace("\r", "");
   ipAddr.replace("\"", "");
-  Serial.println("IP get: " + ipAddr + " END");
+  // Serial.println("IP get: " + ipAddr + " END");
+  lcd.clear();
+  lcd.print("IP Address: ");
+  lcd.setCursor(0, 1);
+  lcd.print(ipAddr);
   randomSeed(analogRead(A2));
+  delay(3000);
 }
 
 void loop()
 {
   lcd.clear();
-  Serial.println("Welcome to the W3Phone!");
+  // Serial.println("Welcome to the W3Phone!");
+  lcd.print("Welcome to the ");
+  lcd.setCursor(0, 1);
+  lcd.print("W3Phone!");
+  delay(3000);
+  lcd.clear();
+
   ASCIIStr = "";
-  String siteURL = readKeypadInput("Please enter your destination site (e.g. google.com): ");
-  delay(100);
+  String siteURL = readKeypadInput("Your address:");
+  delay(1000);
   siteURL.toLowerCase();
-  Serial.println("Communicating with " + siteURL + ": ");
+  // Serial.println("Communicating with " + siteURL + ": ");
+  lcd.clear();
+  lcd.print("Communicating w/");
+  lcd.setCursor(0, 1);
+  lcd.print(siteURL);
+  delay(1000);
+  lcd.print("Response:");
+  lcd.autoscroll();
+
   for (int i = 0; i < 15; i++) {
     // Serial.println("pinging " + siteURL + ": ");
     int siteDelay = pingSite(siteURL);
 
     char ascii = intToASCII(siteDelay);
     ASCIIStr += ascii;
-    Serial.println("Response: " + ASCIIStr);
+    // Serial.println("Response: " + ASCIIStr);
     // Serial.println(siteDelay);
+    lcd.write(ascii);
 
     delay(50); // CANNOT DELETE THIS DELAY
     frequency = convertFreq(ConvNumber(siteDelay));
@@ -174,8 +201,9 @@ void loop()
     delay(250); // wait for 100 milliseconds
 
   }
+  lcd.noAutoscroll();
   noTone(buzzerPin); // stop the tone
-  delay(50);
+  delay(5000);
 }
 
 String readESPSerial()
@@ -220,7 +248,13 @@ String serialPrompt(String prompt = "Please enter your PING target: ") {
 String readKeypadInput(String prompt)
 {
   String result = "";
-  Serial.println(prompt);
+  String displayString = "";
+  String prefix = "http://";
+  // Serial.println(prompt);
+
+  lcd.print(prompt);
+  lcd.setCursor(0, 1);
+  lcd.print(prefix);
   for (;;)
   {
     static unsigned long lastMillis = 0;
@@ -242,28 +276,61 @@ String readKeypadInput(String prompt)
       // Special keys first
       if (key == '#')
       {
-        Serial.println("Final result: " + result);
+        // Serial.println("Final result: " + result);
+        displayString = prefix + result;
+        displayString = displayString.substring(0, 16);
+        lcd.clear();
+        lcd.print("Entered:");
+        lcd.setCursor(0, 1);
+        lcd.print(displayString);
         return result;
       }
 
       if (key == '*')
       {
         result = result.substring(0, result.length() - 1);
-        Serial.println("Result: " + result);
+        // Serial.println("Result: " + result);
+        displayString = prefix + result;
+        displayString = displayString.substring(0, 16);
+        lcd.clear();
+        lcd.print(prompt);
+        lcd.setCursor(0, 1);
+        lcd.print(displayString);
         continue;
       }
 
       if (key == '/')
       {
-        return "portfolio.breakfastberry.live";
+        result = "portfolio.breakfastberry.live";
+        displayString = prefix + result;
+        displayString = displayString.substring(0, 16);
+        lcd.clear();
+        lcd.print(prompt);
+        lcd.setCursor(0, 1);
+        lcd.print(displayString);
+        return result;
       }
 
       if (key == '>') {
-        return "bing.com";
+        result = "bing.com";
+        displayString = prefix + result;
+        displayString = displayString.substring(0, 16);
+        lcd.clear();
+        lcd.print(prompt);
+        lcd.setCursor(0, 1);
+        lcd.print(displayString);
+        return result;
       }
 
       if (key == '<') {
-        return "8.8.8.8";
+        result = "8.8.8.8";
+        displayString = prefix + result;
+        displayString = displayString.substring(0, 16);
+        lcd.clear();
+        lcd.print(prompt);
+        lcd.setCursor(0, 1);
+        lcd.print(displayString);
+        return result;
       }
 
       // Multi key press key detection
@@ -277,7 +344,6 @@ String readKeypadInput(String prompt)
         finalKey = keyString[keyCount % keyString.length()];
         // Serial.println(finalKey);
         result = result.substring(0, result.length() - 1) + finalKey;
-
         lastMillis = millis();
         keyCount++;
       }
@@ -286,12 +352,17 @@ String readKeypadInput(String prompt)
         lastKey = key;
         lastMillis = millis();
         keyCount = 1;
-        // Serial.print("First key press: ");
-        // Serial.println(key);
         result += key;
+
       }
 
-      Serial.println("Result: " + result);
+      // Serial.println("Result: " + result);
+      displayString = prefix + result;
+      displayString = displayString.substring(0, 16);
+      lcd.clear();
+      lcd.print(prompt);
+      lcd.setCursor(0, 1);
+      lcd.print(displayString);
     }
   }
 }
