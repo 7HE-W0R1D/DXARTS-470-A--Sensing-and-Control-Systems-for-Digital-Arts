@@ -4,6 +4,7 @@
 #include <SerLCD.h>
 
 // LCD
+SoftwareSerial lcdSerial(A4, A5); // RX, TX
 SerLCD lcd;
 
 // Wifi
@@ -76,15 +77,15 @@ void setup()
   pinMode(ledDPin, OUTPUT);
   Serial.begin(9600);
 
+  lcdSerial.begin(9600);
   // Initialize the LCD
-  lcd.begin(Serial);
-  // Set the backlight brightness (optional)
-  lcd.setBacklight(255);
+  lcd.begin(lcdSerial);
   // Clear the LCD screen
-  lcd.clear();
+  lcdClear();
   delay(500);
 
   espSerial.begin(9600);
+  espSerial.listen();
   delay(500);
   digitalWrite(ledUPin, HIGH);
   delay(100);
@@ -94,20 +95,23 @@ void setup()
   delay(100);
   digitalWrite(ledDPin, LOW);
 
-  Serial.println("Setting ESP8266 to station mode...");
+  // Serial.println("Setting ESP8266 to station mode...");
+  lcd.print("Setting ESP8266");
+  lcd.setCursor(0, 1);
+  lcd.print("to station mode...");
   espSerial.println("AT+CWMODE=1");
   delay(1000);
 
-  lcd.clear();
+  lcdClear();
   // Serial.println("Connecting to WiFi...");
-  lcd.print("Connecting to WiFi...");
+  lcd.print("WIFI Connecting");
   delay(50);
-  // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
+  espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_x13 + "\",\"" + password_x13 + "\"");
-  espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
+  // espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
   delay(4000);
 
-  lcd.clear();
+  lcdClear();
   String response = readESPSerial();
   // Serial.println(response);
 
@@ -115,7 +119,7 @@ void setup()
   || response.indexOf("WIFI CON") != -1)
   {
     // Serial.println("Connected to WiFi!");
-    lcd.print("Connected to WiFi!");
+    lcd.print("WIFI Connected");
     noTone(buzzerPin); // stop the tone
     tone(buzzerPin, Tones_simple[10]); // generate the tone with the specified frequency
     digitalWrite(ledUPin, HIGH);
@@ -133,7 +137,7 @@ void setup()
   {
     // Serial.println("Failed to connect to WiFi! \nPlease reset the ESP8266 and try again.");
     // for (;;);
-    lcd.print("Failed to connect to WiFi!");
+    lcd.print("WIFI Failed");
     tone(buzzerPin, Tones_simple[3]); // generate the tone with the specified frequency
     delay(500); // wait for 100 milliseconds
     noTone(buzzerPin); // stop the tone
@@ -141,9 +145,9 @@ void setup()
 
   delay(3000);
 
-  lcd.clear();
+  lcdClear();
   // Serial.println("Getting IP Address");
-  lcd.print("Getting IP Address");
+  lcd.print("Getting IP Addr");
   espSerial.println("AT+CIPSTA_CUR?");
   delay(2000);
   String ipStr = readESPSerial();
@@ -152,8 +156,8 @@ void setup()
   ipAddr.replace("\r", "");
   ipAddr.replace("\"", "");
   // Serial.println("IP get: " + ipAddr + " END");
-  lcd.clear();
-  lcd.print("IP Address: ");
+  lcdClear();
+  lcd.print("IP Addr: ");
   lcd.setCursor(0, 1);
   lcd.print(ipAddr);
   randomSeed(analogRead(A2));
@@ -162,27 +166,27 @@ void setup()
 
 void loop()
 {
-  lcd.clear();
+  lcdClear();
   // Serial.println("Welcome to the W3Phone!");
   lcd.print("Welcome to the ");
   lcd.setCursor(0, 1);
   lcd.print("W3Phone!");
   delay(3000);
-  lcd.clear();
+  lcdClear();
 
   ASCIIStr = "";
-  String siteURL = readKeypadInput("Your address:");
+  String siteURL = readKeypadInput("Comm w/ internet!");
   delay(1000);
   siteURL.toLowerCase();
   // Serial.println("Communicating with " + siteURL + ": ");
-  lcd.clear();
-  lcd.print("Communicating w/");
+  lcdClear();
+  lcd.print("Comm w/");
   lcd.setCursor(0, 1);
-  lcd.print(siteURL);
+  lcd.print("http://" + siteURL);
   delay(1000);
+  lcdClear();
   lcd.print("Response:");
-  lcd.autoscroll();
-
+  lcd.setCursor(0, 1);
   for (int i = 0; i < 15; i++) {
     // Serial.println("pinging " + siteURL + ": ");
     int siteDelay = pingSite(siteURL);
@@ -201,9 +205,16 @@ void loop()
     delay(250); // wait for 100 milliseconds
 
   }
-  lcd.noAutoscroll();
   noTone(buzzerPin); // stop the tone
-  delay(5000);
+  delay(3000);
+  lcdClear();
+  lcd.print("Comm Complete");
+  delay(1000);
+  lcdClear();
+  lcd.print("Thank you for");
+  lcd.setCursor(0, 1);
+  lcd.print("using W3Phone!");
+  delay(3000);
 }
 
 String readESPSerial()
@@ -279,7 +290,7 @@ String readKeypadInput(String prompt)
         // Serial.println("Final result: " + result);
         displayString = prefix + result;
         displayString = displayString.substring(0, 16);
-        lcd.clear();
+        lcdClear();
         lcd.print("Entered:");
         lcd.setCursor(0, 1);
         lcd.print(displayString);
@@ -292,7 +303,7 @@ String readKeypadInput(String prompt)
         // Serial.println("Result: " + result);
         displayString = prefix + result;
         displayString = displayString.substring(0, 16);
-        lcd.clear();
+        lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
         lcd.print(displayString);
@@ -304,7 +315,7 @@ String readKeypadInput(String prompt)
         result = "portfolio.breakfastberry.live";
         displayString = prefix + result;
         displayString = displayString.substring(0, 16);
-        lcd.clear();
+        lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
         lcd.print(displayString);
@@ -315,7 +326,7 @@ String readKeypadInput(String prompt)
         result = "bing.com";
         displayString = prefix + result;
         displayString = displayString.substring(0, 16);
-        lcd.clear();
+        lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
         lcd.print(displayString);
@@ -326,7 +337,7 @@ String readKeypadInput(String prompt)
         result = "8.8.8.8";
         displayString = prefix + result;
         displayString = displayString.substring(0, 16);
-        lcd.clear();
+        lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
         lcd.print(displayString);
@@ -359,7 +370,7 @@ String readKeypadInput(String prompt)
       // Serial.println("Result: " + result);
       displayString = prefix + result;
       displayString = displayString.substring(0, 16);
-      lcd.clear();
+      lcdClear();
       lcd.print(prompt);
       lcd.setCursor(0, 1);
       lcd.print(displayString);
@@ -440,4 +451,12 @@ void reset() {
   espSerial.println("AT+RST");
   delay(1000);
   if(espSerial.find("OK") ) Serial.println("Module Reset");
+}
+
+void lcdClear() {
+  lcd.setCursor(0, 0);
+  lcd.print("                ");
+  lcd.setCursor(0, 1);
+  lcd.print("                ");
+  lcd.setCursor(0, 0);
 }

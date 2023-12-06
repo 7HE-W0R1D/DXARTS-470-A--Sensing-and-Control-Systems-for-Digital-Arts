@@ -15,11 +15,14 @@ void setup()
   // Serial.println("Getting MAC Address...");
   // espSerial.println("AT+CIPSTAMAC_DEF?");
 
-  Serial.println("Resetting ESP8266...");
-  espSerial.println("AT+RESTORE");
+  // Serial.println("Resetting ESP8266...");
+  // espSerial.println("AT+RESTORE");
 
   // Serial.println("Setting MAC Address...");
   // espSerial.println("AT+CIPSTAMAC_DEF=\"88:03:f6:43:49:33\"");
+
+  Serial.println("Listing Access Points...");
+  espSerial.println("AT+CWLAP");
 
   delay(5000);
 
