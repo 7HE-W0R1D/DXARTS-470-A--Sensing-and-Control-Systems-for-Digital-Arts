@@ -14,7 +14,8 @@ String password_home = "N;9263k2";
 String ssid_x13 = "ThinkPad";
 String password_x13 = "AMD4750u";
 String ssid = "UW MPSK";
-String password = ":$SpEL7<*7";
+// String password = ":$SpEL7<*7"; // Model 01 Old
+String password = "EKAgE6=,Ur"; // Model 02 New
 
 // Buzzer
 int buzzerPin = 11; // set the buzzer pin
@@ -29,13 +30,13 @@ const byte COLS = 5;
 
 // Wiring: 2 3 4 5 8 9 10 12 || 13
 
-// < is P1, > is P2, / is P3
+// < is P1, > is P2, ~ is P3
 char keys[ROWS][COLS] = {
 //          8    5    4    3    2
-/* 9  */  {'/', '1', '2', '3', ')'},
-/* 10 */  {'>', '4', '5', '6', 'L'},
-/* 13 */  {'<', '7', '8', '9', 'M'},
-/* 12 */  {'(', '*', '0', '#', 'F'}
+/* 9  */  {'~', '1', '2', '3', ' '},
+/* 10 */  {'>', '4', '5', '6', '-'},
+/* 13 */  {'<', '7', '8', '9', '_'},
+/* 12 */  {'(', '*', '0', '#', '/'}
 };
 
 String multiEnabled = "0123456789";
@@ -106,9 +107,9 @@ void setup()
   // Serial.println("Connecting to WiFi...");
   lcd.print("WIFI Connecting");
   delay(50);
-  espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
+  // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_x13 + "\",\"" + password_x13 + "\"");
-  // espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
+  espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
   delay(4000);
 
   lcdClear();
@@ -147,21 +148,21 @@ void setup()
 
   lcdClear();
   // Serial.println("Getting IP Address");
-  lcd.print("Getting IP Addr");
-  espSerial.println("AT+CIPSTA_CUR?");
-  delay(2000);
-  String ipStr = readESPSerial();
-  // Serial.println(ipStr);
-  String ipAddr = ipStr.substring(ipStr.indexOf("\"") + 1, ipStr.lastIndexOf("\""));
-  ipAddr.replace("\r", "");
-  ipAddr.replace("\"", "");
-  // Serial.println("IP get: " + ipAddr + " END");
-  lcdClear();
-  lcd.print("IP Addr: ");
-  lcd.setCursor(0, 1);
-  lcd.print(ipAddr);
+  // lcd.print("Getting IP Addr");
+  // espSerial.println("AT+CIPSTA_CUR?");
+  // delay(2000);
+  // String ipStr = readESPSerial();
+  // // Serial.println(ipStr);
+  // String ipAddr = ipStr.substring(ipStr.indexOf("\"") + 1, ipStr.lastIndexOf("\""));
+  // ipAddr.replace("\r", "");
+  // ipAddr.replace("\"", "");
+  // // Serial.println("IP get: " + ipAddr + " END");
+  // lcdClear();
+  // lcd.print("IP Addr: ");
+  // lcd.setCursor(0, 1);
+  // lcd.print(ipAddr);
   randomSeed(analogRead(A2));
-  delay(3000);
+  // delay(3000);
 }
 
 void loop()
@@ -174,13 +175,19 @@ void loop()
   delay(3000);
   lcdClear();
 
+  lcd.print("Surf the web");
+  lcd.setCursor(0, 1);
+  lcd.print("      w/ keypad!");
+  delay(3000);
+  lcdClear();
+
   ASCIIStr = "";
-  String siteURL = readKeypadInput("Comm w/ internet!");
+  String siteURL = readKeypadInput("Input URL: ");
   delay(1000);
   siteURL.toLowerCase();
   // Serial.println("Communicating with " + siteURL + ": ");
   lcdClear();
-  lcd.print("Comm w/");
+  lcd.print("Connecting to:");
   lcd.setCursor(0, 1);
   lcd.print("http://" + siteURL);
   delay(1000);
@@ -310,11 +317,13 @@ String readKeypadInput(String prompt)
         continue;
       }
 
-      if (key == '/')
+      if (key == '~')
       {
-        result = "portfolio.breakfastberry.live";
+        result = "webfoundation.org";
         displayString = prefix + result;
-        displayString = displayString.substring(0, 16);
+        if (displayString.length() > 16) {
+          displayString = displayString.substring(displayString.length() - 16, displayString.length());
+        }
         lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
@@ -325,7 +334,9 @@ String readKeypadInput(String prompt)
       if (key == '>') {
         result = "bing.com";
         displayString = prefix + result;
-        displayString = displayString.substring(0, 16);
+        if (displayString.length() > 16) {
+          displayString = displayString.substring(displayString.length() - 16, displayString.length());
+        }
         lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
@@ -336,7 +347,9 @@ String readKeypadInput(String prompt)
       if (key == '<') {
         result = "8.8.8.8";
         displayString = prefix + result;
-        displayString = displayString.substring(0, 16);
+        if (displayString.length() > 16) {
+          displayString = displayString.substring(displayString.length() - 16, displayString.length());
+        }
         lcdClear();
         lcd.print(prompt);
         lcd.setCursor(0, 1);
@@ -369,7 +382,9 @@ String readKeypadInput(String prompt)
 
       // Serial.println("Result: " + result);
       displayString = prefix + result;
-      displayString = displayString.substring(0, 16);
+      if (displayString.length() > 16) {
+        displayString = displayString.substring(displayString.length() - 16, displayString.length());
+      }
       lcdClear();
       lcd.print(prompt);
       lcd.setCursor(0, 1);

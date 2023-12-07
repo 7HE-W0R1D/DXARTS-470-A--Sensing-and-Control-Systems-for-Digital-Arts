@@ -22,7 +22,7 @@ void setup()
   // espSerial.println("AT+CIPSTAMAC_DEF=\"88:03:f6:43:49:33\"");
 
   Serial.println("Listing Access Points...");
-  espSerial.println("AT+CWLAP");
+  espSerial.print("AT+CWLAP");
 
   delay(5000);
 

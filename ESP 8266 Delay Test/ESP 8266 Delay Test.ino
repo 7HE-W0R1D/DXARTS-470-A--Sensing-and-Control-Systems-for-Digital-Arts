@@ -1,25 +1,25 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial espSerial(A0, A1); // RX, TX
+SoftwareSerial espSerial(A1, A0); // RX, TX
 String ssid_home = "MSI7C94";
 String password_home = "MSIB550M";
 String ssid = "UW MPSK";
-String password = ":$SpEL7<*7";
+// String password = ":$SpEL7<*7"; // Model 01 Old
+String password = "EKAgE6=,Ur"; // Model 02 New
 
 void setup()
 {
   Serial.begin(9600);
   espSerial.begin(9600);
   delay(500);
-  reset();
-  delay(500);
 
   randomSeed(analogRead(A2));
 
+  delay(10);
   Serial.println("Connecting to WiFi...");
   // espSerial.println("AT+CWJAP_CUR=\"" + ssid_home + "\",\"" + password_home + "\"");
   espSerial.println("AT+CWJAP_CUR=\"" + ssid + "\",\"" + password + "\"");
-  delay(4000);
+  delay(6000);
 
   String response = readESPSerial();
   Serial.println(response);
